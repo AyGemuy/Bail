@@ -382,9 +382,9 @@ const pollMsg = await getMessage(creationMsgKey);
 if (!pollMsg) {
   logger?.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update');
 } else {
-  const pollCreation = pollMsg.message;
+  const pollCreation = pollMsg?.message;
   const meIdNormalized = jidNormalizedUser(meIds);
-  const voterJid = getKeyAuthor((message as any).key, meIdNormalized);
+  const voterJid = getKeyAuthor((message as any)?.key, meIdNormalized);
   const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalized);
   const pollEncKey = pollCreation.messageContextInfo?.messageSecret;
 
@@ -403,7 +403,7 @@ if (!pollMsg) {
         key: creationMsgKey,
         update: {
           pollUpdates: [{
-            pollUpdateMessageKey: (message as any).key,
+            pollUpdateMessageKey: (message as any)?.key,
             vote: voteMsg,
             senderTimestampMs: Number((content as any).pollUpdateMessage.senderTimestampMs)
           }]
