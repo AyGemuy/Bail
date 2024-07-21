@@ -190,7 +190,7 @@ export const makeChatsSocket = (config: SocketConfig) => {
 
 		return results.map(user => {
 			const contact = getBinaryNodeChild(user, 'contact')
-			return { exists: contact?.attrs.type === 'in', jid: user.attrs.jid }
+			return { exists: contact?.attrs.type === 'in', jid: user.attrs.jid, ...contact }
 		}).filter(item => item.exists)
 	}
 
@@ -205,7 +205,8 @@ export const makeChatsSocket = (config: SocketConfig) => {
 			return {
 				user: item.attrs.jid,
 				status: status && status.content ? status.content.toString() : null,
-				setAt: new Date(+(status?.attrs.t || 0) * 1000)
+				setAt: new Date(+(status?.attrs.t || 0) * 1000),
+				...status
 			}
 		})
 	}
@@ -547,7 +548,8 @@ export const makeChatsSocket = (config: SocketConfig) => {
 		const result = await query({
 			tag: 'iq',
 			attrs: {
-				to: jid,
+				target: jid,
+				to: S_WHATSAPP_NET,
 				type: 'get',
 				xmlns: 'w:profile:picture'
 			},
