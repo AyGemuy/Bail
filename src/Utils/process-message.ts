@@ -374,22 +374,35 @@ const processMessage = async(
 		}
 
 	} else if(content?.pollUpdateMessage) {
-		const creationMsgKey = content.pollUpdateMessage.pollCreationMessageKey;
-  const pollMsg = await getMessage(creationMsgKey);
-  
-  if (!pollMsg) {
-    logger.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update');
-    return;
-  }
+		interface PollUpdateMessage {
+  pollCreationMessageKey: string;
+  vote: any;
+  senderTimestampMs: any;
+}
 
+interface PollContent {
+  pollUpdateMessage: PollUpdateMessage;
+}
+
+interface PollMessage {
+  message: any;
+  key: any;
+}
+
+const creationMsgKey = (content as PollContent).pollUpdateMessage.pollCreationMessageKey;
+const pollMsg: PollMessage | null = await getMessage(creationMsgKey);
+
+if (!pollMsg) {
+  logger.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update');
+} else {
   const pollCreation = pollMsg.message;
   const meIdNormalized = jidNormalizedUser(meId);
-  const voterJid = getKeyAuthor(message.key, meIdNormalized);
+  const voterJid = getKeyAuthor((message as PollMessage).key, meIdNormalized);
   const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalized);
   const pollEncKey = pollCreation.messageContextInfo?.messageSecret;
 
   try {
-    const voteMsg = decryptPollVote(content.pollUpdateMessage.vote, {
+    const voteMsg = decryptPollVote((content as PollContent).pollUpdateMessage.vote, {
       pollEncKey,
       pollCreatorJid,
       pollMsgId: creationMsgKey.id,
@@ -400,9 +413,9 @@ const processMessage = async(
       key: creationMsgKey,
       update: {
         pollUpdates: [{
-          pollUpdateMessageKey: message.key,
+          pollUpdateMessageKey: (message as PollMessage).key,
           vote: voteMsg,
-          senderTimestampMs: Number(content.pollUpdateMessage.senderTimestampMs)
+          senderTimestampMs: Number((content as PollContent).pollUpdateMessage.senderTimestampMs)
         }]
       }
     }];
@@ -418,6 +431,8 @@ const processMessage = async(
   } catch (err) {
     logger.warn({ err, creationMsgKey }, 'failed to decrypt poll vote');
   }
+}
+
 	}
 
 	if(Object.keys(chat).length > 1) {
