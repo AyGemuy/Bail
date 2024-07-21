@@ -374,65 +374,55 @@ const processMessage = async(
 		}
 
 	} else if(content?.pollUpdateMessage) {
-		interface PollUpdateMessage {
-  pollCreationMessageKey: string;
-  vote: any;
-  senderTimestampMs: any;
-}
+		const meIds: string = meId
 
-interface PollContent {
-  pollUpdateMessage: PollUpdateMessage;
-}
-
-interface PollMessage {
-  message: any;
-  key: any;
-}
-
-const creationMsgKey = (content as PollContent).pollUpdateMessage.pollCreationMessageKey;
-const pollMsg: PollMessage | null = await getMessage(creationMsgKey);
+const creationMsgKey = (content as any).pollUpdateMessage.pollCreationMessageKey
+const pollMsg = await getMessage(creationMsgKey)
 
 if (!pollMsg) {
-  logger.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update');
+  logger.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update')
 } else {
-  const pollCreation = pollMsg.message;
-  const meIdNormalized = jidNormalizedUser(meId);
-  const voterJid = getKeyAuthor((message as PollMessage).key, meIdNormalized);
-  const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalized);
-  const pollEncKey = pollCreation.messageContextInfo?.messageSecret;
+  const pollCreation = pollMsg.message
+  const meIdNormalized = jidNormalizedUser(meIds)
+  const voterJid = getKeyAuthor((message as any).key, meIdNormalized)
+  const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalized)
+  const pollEncKey = pollCreation.messageContextInfo?.messageSecret
 
-  try {
-    const voteMsg = decryptPollVote((content as PollContent).pollUpdateMessage.vote, {
-      pollEncKey,
-      pollCreatorJid,
-      pollMsgId: creationMsgKey.id,
-      voterJid
-    });
+  if (!pollEncKey) {
+    logger.warn({ creationMsgKey }, 'poll encryption key not found')
+  } else {
+    try {
+      const voteMsg = decryptPollVote((content as any).pollUpdateMessage.vote, {
+        pollEncKey,
+        pollCreatorJid,
+        pollMsgId: creationMsgKey.id,
+        voterJid
+      })
 
-    const pollUpdate = [{
-      key: creationMsgKey,
-      update: {
-        pollUpdates: [{
-          pollUpdateMessageKey: (message as PollMessage).key,
-          vote: voteMsg,
-          senderTimestampMs: Number((content as PollContent).pollUpdateMessage.senderTimestampMs)
-        }]
-      }
-    }];
+      const pollUpdate = [{
+        key: creationMsgKey,
+        update: {
+          pollUpdates: [{
+            pollUpdateMessageKey: (message as any).key,
+            vote: voteMsg,
+            senderTimestampMs: Number((content as any).pollUpdateMessage.senderTimestampMs)
+          }]
+        }
+      }]
 
-    ev.emit('messages.update', pollUpdate);
+      ev.emit('messages.update', pollUpdate)
 
-    const aggregateVotes = await getAggregateVotesInPollMessage({
-      message: pollCreation,
-      pollUpdates: pollUpdate[0].update.pollUpdates
-    });
+      const aggregateVotes = await getAggregateVotesInPollMessage({
+        message: pollCreation,
+        pollUpdates: pollUpdate[0].update.pollUpdates
+      })
 
-    logger.info({ pollUpdate: aggregateVotes }, 'poll update');
-  } catch (err) {
-    logger.warn({ err, creationMsgKey }, 'failed to decrypt poll vote');
+      logger.info({ pollUpdate: aggregateVotes }, 'poll update')
+    } catch (err) {
+      logger.warn({ err, creationMsgKey }, 'failed to decrypt poll vote')
+    }
   }
 }
-
 	}
 
 	if(Object.keys(chat).length > 1) {
