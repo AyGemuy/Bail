@@ -2,7 +2,7 @@ import { AxiosRequestConfig } from 'axios'
 import type { Logger } from 'pino'
 import { proto } from '../../WAProto'
 import { AuthenticationCreds, BaileysEventEmitter, Chat, GroupMetadata, ParticipantAction, RequestJoinAction, RequestJoinMethod, SignalKeyStoreWithTransaction, SocketConfig, WAMessageStubType } from '../Types'
-import { getContentType, getAggregateVotesInPollMessage, normalizeMessageContent } from '../Utils/messages'
+import { getContentType, normalizeMessageContent } from '../Utils/messages'
 import { areJidsSameUser, isJidBroadcast, isJidStatusBroadcast, jidNormalizedUser } from '../WABinary'
 import { aesDecryptGCM, hmacSign } from './crypto'
 import { getKeyAuthor, toNumber } from './generics'
@@ -374,55 +374,51 @@ const processMessage = async(
 		}
 
 	} else if(content?.pollUpdateMessage) {
-		const meIds: string = meId;
+		const creationMsgKey = content.pollUpdateMessage.pollCreationMessageKey!
+		// we need to fetch the poll creation message to get the poll enc key
+		const pollMsg = await getMessage(creationMsgKey)
+		if(pollMsg) {
+			const meIdNormalised = jidNormalizedUser(meId)
+			const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalised)
+			const voterJid = getKeyAuthor(message.key!, meIdNormalised)
+			const pollEncKey = pollMsg.messageContextInfo?.messageSecret!
 
-const creationMsgKey = (content as any).pollUpdateMessage.pollCreationMessageKey;
-const pollMsg = await getMessage(creationMsgKey);
-
-if (!pollMsg) {
-  logger?.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update');
-} else {
-  const pollCreation = pollMsg?.message;
-  const meIdNormalized = jidNormalizedUser(meIds);
-  const voterJid = getKeyAuthor((message as any)?.key, meIdNormalized);
-  const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalized);
-  const pollEncKey = pollCreation.messageContextInfo?.messageSecret;
-
-  if (!pollEncKey) {
-    logger?.warn({ creationMsgKey }, 'poll encryption key not found');
-  } else {
-    try {
-      const voteMsg = decryptPollVote((content as any).pollUpdateMessage.vote, {
-        pollEncKey,
-        pollCreatorJid,
-        pollMsgId: creationMsgKey.id,
-        voterJid
-      });
-
-      const pollUpdate = [{
-        key: creationMsgKey,
-        update: {
-          pollUpdates: [{
-            pollUpdateMessageKey: (message as any)?.key,
-            vote: voteMsg,
-            senderTimestampMs: Number((content as any).pollUpdateMessage.senderTimestampMs)
-          }]
-        }
-      }];
-
-      ev.emit('messages.update', pollUpdate);
-
-      const aggregateVotes = await getAggregateVotesInPollMessage({
-        message: pollCreation,
-        pollUpdates: pollUpdate[0].update.pollUpdates
-      });
-
-      logger?.info({ pollUpdate: aggregateVotes }, 'poll update');
-    } catch (err) {
-      logger?.warn({ err, creationMsgKey }, 'failed to decrypt poll vote');
-    }
-  }
-}
+			try {
+				const voteMsg = decryptPollVote(
+					content.pollUpdateMessage.vote!,
+					{
+						pollEncKey,
+						pollCreatorJid,
+						pollMsgId: creationMsgKey.id!,
+						voterJid,
+					}
+				)
+				ev.emit('messages.update', [
+					{
+						key: creationMsgKey,
+						update: {
+							pollUpdates: [
+								{
+									pollUpdateMessageKey: message.key,
+									vote: voteMsg,
+									senderTimestampMs: (content.pollUpdateMessage.senderTimestampMs! as Long).toNumber(),
+								}
+							]
+						}
+					}
+				])
+			} catch(err) {
+				logger?.warn(
+					{ err, creationMsgKey },
+					'failed to decrypt poll vote'
+				)
+			}
+		} else {
+			logger?.warn(
+				{ creationMsgKey },
+				'poll creation message not found, cannot decrypt update'
+			)
+		}
 	}
 
 	if(Object.keys(chat).length > 1) {
