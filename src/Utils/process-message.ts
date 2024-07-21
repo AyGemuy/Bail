@@ -374,22 +374,22 @@ const processMessage = async(
 		}
 
 	} else if(content?.pollUpdateMessage) {
-		const meIds: string = meId
+		const meIds: string = meId;
 
-const creationMsgKey = (content as any).pollUpdateMessage.pollCreationMessageKey
-const pollMsg = await getMessage(creationMsgKey)
+const creationMsgKey = (content as any).pollUpdateMessage.pollCreationMessageKey;
+const pollMsg = await getMessage(creationMsgKey);
 
 if (!pollMsg) {
-  logger.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update')
+  logger?.warn({ creationMsgKey }, 'poll creation message not found, cannot decrypt update');
 } else {
-  const pollCreation = pollMsg.message
-  const meIdNormalized = jidNormalizedUser(meIds)
-  const voterJid = getKeyAuthor((message as any).key, meIdNormalized)
-  const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalized)
-  const pollEncKey = pollCreation.messageContextInfo?.messageSecret
+  const pollCreation = pollMsg.message;
+  const meIdNormalized = jidNormalizedUser(meIds);
+  const voterJid = getKeyAuthor((message as any).key, meIdNormalized);
+  const pollCreatorJid = getKeyAuthor(creationMsgKey, meIdNormalized);
+  const pollEncKey = pollCreation.messageContextInfo?.messageSecret;
 
   if (!pollEncKey) {
-    logger.warn({ creationMsgKey }, 'poll encryption key not found')
+    logger?.warn({ creationMsgKey }, 'poll encryption key not found');
   } else {
     try {
       const voteMsg = decryptPollVote((content as any).pollUpdateMessage.vote, {
@@ -397,7 +397,7 @@ if (!pollMsg) {
         pollCreatorJid,
         pollMsgId: creationMsgKey.id,
         voterJid
-      })
+      });
 
       const pollUpdate = [{
         key: creationMsgKey,
@@ -408,18 +408,18 @@ if (!pollMsg) {
             senderTimestampMs: Number((content as any).pollUpdateMessage.senderTimestampMs)
           }]
         }
-      }]
+      }];
 
-      ev.emit('messages.update', pollUpdate)
+      ev.emit('messages.update', pollUpdate);
 
       const aggregateVotes = await getAggregateVotesInPollMessage({
         message: pollCreation,
         pollUpdates: pollUpdate[0].update.pollUpdates
-      })
+      });
 
-      logger.info({ pollUpdate: aggregateVotes }, 'poll update')
+      logger?.info({ pollUpdate: aggregateVotes }, 'poll update');
     } catch (err) {
-      logger.warn({ err, creationMsgKey }, 'failed to decrypt poll vote')
+      logger?.warn({ err, creationMsgKey }, 'failed to decrypt poll vote');
     }
   }
 }
