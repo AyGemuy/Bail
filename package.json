@@ -12,9 +12,9 @@
     "automation",
     "multi-device"
   ],
-  "homepage": "https://github.com/nstar-y/Bail",
+  "homepage": "https://github.com/AyGemuy/Bail",
   "repository": {
-    "url": "git+ssh://git@github.com/nstar-y/Bail.git"
+    "url": "git+ssh://git@github.com/AyGemuy/Bail.git"
   },
   "license": "MIT",
   "author": "Adhiraj Singh",
@@ -43,49 +43,49 @@
     "test": "jest"
   },
   "dependencies": {
-    "@adiwajshing/keyed-db": "^0.2.4",
-    "@hapi/boom": "^9.1.3",
-    "async-lock": "^1.4.1",
-    "audio-decode": "^2.1.3",
-    "axios": "^1.6.0",
-    "cache-manager": "4.0.1",
-    "futoin-hkdf": "^1.5.1",
-    "libphonenumber-js": "^1.10.20",
-    "libsignal": "github:nstar-y/libsignal",
-    "music-metadata": "^7.12.3",
-    "node-cache": "^5.1.2",
-    "pino": "^7.0.0",
-    "protobufjs": "^6.11.3",
-    "uuid": "^10.0.0",
-    "ws": "^8.13.0"
+    "@adiwajshing/keyed-db": "*",
+    "@hapi/boom": "*",
+    "async-lock": "*",
+    "audio-decode": "*",
+    "axios": "*",
+    "cache-manager": "*",
+    "futoin-hkdf": "*",
+    "libphonenumber-js": "*",
+    "libsignal": "npm:super-libsignal",
+    "music-metadata": "*",
+    "node-cache": "*",
+    "pino": "*",
+    "protobufjs": "*",
+    "uuid": "*",
+    "ws": "*"
   },
   "devDependencies": {
-    "@adiwajshing/eslint-config": "github:adiwajshing/eslint-config",
-    "@types/got": "^9.6.11",
-    "@types/jest": "^27.5.1",
-    "@types/node": "^16.0.0",
-    "@types/sharp": "^0.29.4",
-    "@types/ws": "^8.0.0",
-    "conventional-changelog-cli": "^2.2.2",
-    "eslint": "^8.0.0",
-    "jest": "^27.0.6",
-    "jimp": "^0.22.12",
-    "json": "^11.0.0",
-    "link-preview-js": "^3.0.5",
-    "open": "^8.4.2",
-    "qrcode-terminal": "^0.12.0",
-    "release-it": "^15.10.3",
-    "sharp": "^0.32.6",
-    "ts-jest": "^27.0.3",
-    "ts-node": "^10.8.1",
-    "typedoc": "^0.24.7",
-    "typescript": "^4.6.4"
+    "@adiwajshing/eslint-config": "npm:@antfu/eslint-config",
+    "@types/got": "*",
+    "@types/jest": "*",
+    "@types/node": "*",
+    "@types/sharp": "*",
+    "@types/ws": "*",
+    "conventional-changelog-cli": "*",
+    "eslint": "*",
+    "jest": "*",
+    "jimp": "*",
+    "json": "*",
+    "link-preview-js": "*",
+    "open": "*",
+    "qrcode-terminal": "*",
+    "release-it": "*",
+    "sharp": "*",
+    "ts-jest": "*",
+    "ts-node": "*",
+    "typedoc": "*",
+    "typescript": "*"
   },
   "peerDependencies": {
-    "jimp": "^0.22.12",
-    "link-preview-js": "^3.0.0",
-    "qrcode-terminal": "^0.12.0",
-    "sharp": "^0.32.6"
+    "jimp": "*",
+    "link-preview-js": "*",
+    "qrcode-terminal": "*",
+    "sharp": "*"
   },
   "peerDependenciesMeta": {
     "jimp": {
@@ -101,5 +101,5 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn"
 }
